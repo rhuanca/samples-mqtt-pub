@@ -160,29 +160,17 @@ int main(int argc, char **argv) {
     len = MQTTSerialize_connect(buf, buflen, &data);
     rc = transport_sendPacketBuffer(mysock, buf, len);
 
-
     printf("Connecting to %s %d\n", opts.host, opts.port);
-
 
     topicString.cstring = "test";
 
     len = MQTTSerialize_publish(buf, buflen, 0, 0, 0, 0, topicString, (unsigned char *) payload, payloadlen);
-
-    printf("len = %d\n", len);
-    printf("mysock = %d\n", mysock);
-
-
     rc = transport_sendPacketBuffer(mysock, buf, len);
-
-    printf("result 1 = %d\n", rc);
 
     len = MQTTSerialize_disconnect(buf, buflen);
     rc = transport_sendPacketBuffer(mysock, buf, len);
 
-    printf("result 2 = %d\n", rc);
-
     transport_close(mysock);
-
 
     return 0;
 }
