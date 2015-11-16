@@ -177,6 +177,9 @@ int main(int argc, char **argv) {
     topicString.cstring = opts.topic;
     message_len = strlen(opts.message);
 
+
+    printf("Sending data...");
+
     // check time
     begin = clock();
 
@@ -193,7 +196,7 @@ int main(int argc, char **argv) {
 
     printf("Time spent:\n");
     printf("  secs: %.1f\n", time_spent);
-    printf("  clock ticks: %Lf\n", (double)(end - begin));
+    printf("  clock ticks: %.2f\n", (double)(end - begin));
 
     // disconnect
     len = MQTTSerialize_disconnect(buf, buf_len);
