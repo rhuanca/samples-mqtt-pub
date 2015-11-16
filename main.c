@@ -151,11 +151,15 @@ int main(int argc, char **argv) {
     signal(SIGINT, cfinish);
     signal(SIGTERM, cfinish);
 
+    // open socket
     mqtt_sock_fd = transport_open(opts.host, opts.port);
 
     if (mqtt_sock_fd < 0)
         return mqtt_sock_fd;
 
+
+
+    // connect
     MQTTPacket_connectData data = MQTTPacket_connectData_initializer;
     data.willFlag = 0;
     data.MQTTVersion = 3;
@@ -166,7 +170,6 @@ int main(int argc, char **argv) {
     data.cleansession = 1;
 
     printf("Connecting to %s %d\n", opts.host, opts.port);
-
     len = MQTTSerialize_connect(buf, buf_len, &data);
     rc = transport_sendPacketBuffer(mqtt_sock_fd, buf, len);
 
@@ -175,22 +178,14 @@ int main(int argc, char **argv) {
     message_len = strlen(opts.message);
 
     for(counter=0; counter<opts.repeat; counter++) {
-
-
-        printf("counter: %d\n", counter);
-
+        // publish
         len = MQTTSerialize_publish(buf, buf_len, 0, 0, 0, 0, topicString, opts.message, message_len);
         rc = transport_sendPacketBuffer(mqtt_sock_fd, buf, len);
-
-        printf(">>> result: %d\n", rc);
-
-        len = MQTTSerialize_disconnect(buf, buf_len);
-        rc = transport_sendPacketBuffer(mqtt_sock_fd, buf, len);
-
-
-        printf(">>> result: %d\n", rc);
-
     }
+
+    // disconnect
+    len = MQTTSerialize_disconnect(buf, buf_len);
+    rc = transport_sendPacketBuffer(mqtt_sock_fd, buf, len);
 
     transport_close(mqtt_sock_fd);
     return 0;
