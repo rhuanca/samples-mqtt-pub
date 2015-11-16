@@ -5,13 +5,9 @@
 #include <signal.h>
 #include <memory.h>
 
-#include <sys/time.h>
-
-
 #include "MQTTClient.h"
+#include "transport.h"
 
-
-volatile int toStop = 0;
 
 void usage()
 {
@@ -31,9 +27,14 @@ void usage()
 void cfinish(int sig)
 {
     signal(SIGINT, NULL);
-    toStop = 1;
 }
 
+
+void stop_init(void)
+{
+    signal(SIGINT, cfinish);
+    signal(SIGTERM, cfinish);
+}
 
 struct opts_struct
 {
@@ -134,6 +135,18 @@ int main(int argc, char** argv)
     int rc = 0;
     unsigned char buf[100];
     unsigned char readbuf[100];
+    int buflen = sizeof(buf);
+
+    int len = 0;
+
+    char* payload = "hola de nuevo....ops...111.. este mensage no quiere ser publicado...";
+    int payloadlen = strlen(payload);
+    int mysock = 0;
+
+    stop_init();
+
+    MQTTString topicString = MQTTString_initializer;
+
 
     if (argc < 2)
         usage();
@@ -143,21 +156,18 @@ int main(int argc, char** argv)
     printf("host: %s\n", opts.host );
     printf("topic: %s\n", opts.topic);
 
-    printf("hello----------------1\n");
-
-    Network n;
-    Client c;
-
     signal(SIGINT, cfinish);
     signal(SIGTERM, cfinish);
 
+    mysock = transport_open(opts.host, opts.port);
+
+
+    if(mysock < 0)
+        return mysock;
+
+
     printf("hello----------------2\n");
 
-    NewNetwork(&n);
-    ConnectNetwork(&n, opts.host, opts.port);
-    MQTTClient(&c, &n, 1000, buf, 100, readbuf, 100);
-
-    printf("hello----------------3\n");
 
     MQTTPacket_connectData data = MQTTPacket_connectData_initializer;
     data.willFlag = 0;
@@ -165,20 +175,35 @@ int main(int argc, char** argv)
     data.clientID.cstring = opts.clientid;
     data.username.cstring = opts.username;
     data.password.cstring = opts.password;
-
     data.keepAliveInterval = 10;
     data.cleansession = 1;
+
+    len = MQTTSerialize_connect(buf, buflen, &data);
+    rc = transport_sendPacketBuffer(mysock, buf, len);
+
+
     printf("Connecting to %s %d\n", opts.host, opts.port);
 
-    rc = MQTTConnect(&c, &data);
-    printf("Connected %d\n", rc);
+
+    topicString.cstring = "test";
+
+    len = MQTTSerialize_publish(buf, buflen, 0, 0, 0, 0, topicString, (unsigned char*)payload, payloadlen);
+
+    printf("len = %d\n", len);
+    printf("mysock = %d\n", mysock);
 
 
+    rc = transport_sendPacketBuffer(mysock, buf, len);
 
+    printf("result 1 = %d\n", rc);
 
+    len = MQTTSerialize_disconnect(buf, buflen);
+    rc = transport_sendPacketBuffer(mysock, buf, len);
 
-    MQTTDisconnect(&c);
-    n.disconnect(&n);
+    printf("result 2 = %d\n", rc);
+
+    transport_close(mysock);
+
 
     return 0;
 }
