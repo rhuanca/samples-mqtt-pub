@@ -1,13 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
-
-
 #include <signal.h>
 #include <memory.h>
+#include <time.h>
 
 #include "MQTTClient.h"
 #include "transport.h"
-
 
 void usage() {
     printf("MQTT stdout subscriber\n");
@@ -121,15 +119,17 @@ void getopts(int argc, char **argv) {
 }
 
 int main(int argc, char **argv) {
-    int rc = 0;
     unsigned char buf[100];
     int buf_len = sizeof(buf);
-
     int len = 0;
     int mqtt_sock_fd = 0;
     int message_len = 0;
     int counter = 0;
+    int rc = 0;
+    double time_spent;
 
+
+    clock_t begin, end;
     MQTTString topicString = MQTTString_initializer;
 
     stop_init();
@@ -177,11 +177,23 @@ int main(int argc, char **argv) {
     topicString.cstring = opts.topic;
     message_len = strlen(opts.message);
 
+    // check time
+    begin = clock();
+
     for(counter=0; counter<opts.repeat; counter++) {
         // publish
         len = MQTTSerialize_publish(buf, buf_len, 0, 0, 0, 0, topicString, opts.message, message_len);
         rc = transport_sendPacketBuffer(mqtt_sock_fd, buf, len);
     }
+
+    // check time
+    end = clock();
+
+    time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+
+    printf("Time spent:\n");
+    printf("  secs: %.1f\n", time_spent);
+    printf("  clock ticks: %Lf\n", (double)(end - begin));
 
     // disconnect
     len = MQTTSerialize_disconnect(buf, buf_len);
