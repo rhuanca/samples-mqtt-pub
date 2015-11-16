@@ -41,10 +41,11 @@ struct opts_struct {
     int port;
     char *topic;
     char *message;
+    int repeat;
 } opts =
         {
                 (char *) "stdout-subscriber", QOS2, NULL, NULL, (char *) "localhost", 1883,
-                (char *) "test_topic"
+                (char *) "test_topic", "test_message" , 1
         };
 
 
@@ -108,6 +109,12 @@ void getopts(int argc, char **argv) {
             else
                 usage();
         }
+        else if (strcmp(argv[count], "--repeat") == 0) {
+            if (++count < argc)
+                opts.repeat = atoi(argv[count]);
+            else
+                usage();
+        }
         count++;
     }
 
@@ -116,33 +123,38 @@ void getopts(int argc, char **argv) {
 int main(int argc, char **argv) {
     int rc = 0;
     unsigned char buf[100];
-    unsigned char readbuf[100];
-    int buflen = sizeof(buf);
+    int buf_len = sizeof(buf);
 
     int len = 0;
-
-    int mysock = 0;
-
-    stop_init();
+    int mqtt_sock_fd = 0;
+    int message_len = 0;
+    int counter = 0;
 
     MQTTString topicString = MQTTString_initializer;
 
+    stop_init();
 
-    if (argc < 2)
+    if (argc < 1)
         usage();
 
     getopts(argc, argv);
+    printf("Arguments:\n");
+    printf("  host: %s\n", opts.host);
+    printf("  port: %d\n", opts.port);
+    printf("  topic: %s\n", opts.topic);
+    printf("  message: %s\n", opts.message);
+    printf("  repeat: %d\n", opts.repeat);
 
-    printf("host: %s\n", opts.host);
-    printf("topic: %s\n", opts.topic);
+    printf("\n");
+    printf("\n");
 
     signal(SIGINT, cfinish);
     signal(SIGTERM, cfinish);
 
-    mysock = transport_open(opts.host, opts.port);
+    mqtt_sock_fd = transport_open(opts.host, opts.port);
 
-    if (mysock < 0)
-        return mysock;
+    if (mqtt_sock_fd < 0)
+        return mqtt_sock_fd;
 
     MQTTPacket_connectData data = MQTTPacket_connectData_initializer;
     data.willFlag = 0;
@@ -155,20 +167,31 @@ int main(int argc, char **argv) {
 
     printf("Connecting to %s %d\n", opts.host, opts.port);
 
-    len = MQTTSerialize_connect(buf, buflen, &data);
-    rc = transport_sendPacketBuffer(mysock, buf, len);
+    len = MQTTSerialize_connect(buf, buf_len, &data);
+    rc = transport_sendPacketBuffer(mqtt_sock_fd, buf, len);
 
-
-    printf("Connection successful");
+    printf("Connection successful\n");
     topicString.cstring = opts.topic;
+    message_len = strlen(opts.message);
 
-    len = MQTTSerialize_publish(buf, buflen, 0, 0, 0, 0, topicString, (unsigned char *) opts.message, strlen(opts.message));
-    rc = transport_sendPacketBuffer(mysock, buf, len);
+    for(counter=0; counter<opts.repeat; counter++) {
 
-    len = MQTTSerialize_disconnect(buf, buflen);
-    rc = transport_sendPacketBuffer(mysock, buf, len);
 
-    transport_close(mysock);
+        printf("counter: %d\n", counter);
 
+        len = MQTTSerialize_publish(buf, buf_len, 0, 0, 0, 0, topicString, opts.message, message_len);
+        rc = transport_sendPacketBuffer(mqtt_sock_fd, buf, len);
+
+        printf(">>> result: %d\n", rc);
+
+        len = MQTTSerialize_disconnect(buf, buf_len);
+        rc = transport_sendPacketBuffer(mqtt_sock_fd, buf, len);
+
+
+        printf(">>> result: %d\n", rc);
+
+    }
+
+    transport_close(mqtt_sock_fd);
     return 0;
 }
