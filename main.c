@@ -15,11 +15,11 @@ void usage() {
     printf("  --host <hostname> (default is localhost)\n");
     printf("  --port <port> (default is 1883)\n");
     printf("  --qos <qos> (default is 2)\n");
-    printf("  --delimiter <delim> (default is \\n)\n");
-    printf("  --clientid <clientid> (default is hostname+timestamp)\n");
+    printf("  --clientid <clientid> (stdout-subscriber)\n");
     printf("  --username none\n");
     printf("  --password none\n");
-    printf("  --showtopics <on or off> (default is on if the topic has a wildcard, else off)\n");
+    printf("  --topic <topic> (default is test_topic)\n");
+    printf("  --message <message>\n");
     exit(-1);
 }
 
