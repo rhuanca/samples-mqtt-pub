@@ -34,17 +34,16 @@ void stop_init(void) {
 
 struct opts_struct {
     char *clientid;
-    int nodelimiter;
-    char *delimiter;
     enum QoS qos;
     char *username;
     char *password;
     char *host;
     int port;
     char *topic;
+    char *message;
 } opts =
         {
-                (char *) "stdout-subscriber", 0, (char *) "\n", QOS2, NULL, NULL, (char *) "localhost", 1883,
+                (char *) "stdout-subscriber", QOS2, NULL, NULL, (char *) "localhost", 1883,
                 (char *) "test_topic"
         };
 
@@ -97,15 +96,15 @@ void getopts(int argc, char **argv) {
             else
                 usage();
         }
-        else if (strcmp(argv[count], "--delimiter") == 0) {
-            if (++count < argc)
-                opts.delimiter = argv[count];
-            else
-                opts.nodelimiter = 1;
-        }
         else if (strcmp(argv[count], "--topic") == 0) {
             if (++count < argc)
                 opts.topic = argv[count];
+            else
+                usage();
+        }
+        else if (strcmp(argv[count], "--message") == 0) {
+            if (++count < argc)
+                opts.message = argv[count];
             else
                 usage();
         }
@@ -122,8 +121,6 @@ int main(int argc, char **argv) {
 
     int len = 0;
 
-    char *payload = "message";
-    int payloadlen = strlen(payload);
     int mysock = 0;
 
     stop_init();
@@ -144,7 +141,6 @@ int main(int argc, char **argv) {
 
     mysock = transport_open(opts.host, opts.port);
 
-
     if (mysock < 0)
         return mysock;
 
@@ -157,14 +153,16 @@ int main(int argc, char **argv) {
     data.keepAliveInterval = 10;
     data.cleansession = 1;
 
+    printf("Connecting to %s %d\n", opts.host, opts.port);
+
     len = MQTTSerialize_connect(buf, buflen, &data);
     rc = transport_sendPacketBuffer(mysock, buf, len);
 
-    printf("Connecting to %s %d\n", opts.host, opts.port);
 
-    topicString.cstring = "test";
+    printf("Connection successful");
+    topicString.cstring = opts.topic;
 
-    len = MQTTSerialize_publish(buf, buflen, 0, 0, 0, 0, topicString, (unsigned char *) payload, payloadlen);
+    len = MQTTSerialize_publish(buf, buflen, 0, 0, 0, 0, topicString, (unsigned char *) opts.message, strlen(opts.message));
     rc = transport_sendPacketBuffer(mysock, buf, len);
 
     len = MQTTSerialize_disconnect(buf, buflen);
