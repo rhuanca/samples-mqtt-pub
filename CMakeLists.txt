@@ -6,7 +6,6 @@ set(SOURCE_FILES
     ${CMAKE_SOURCE_DIR}/transport.c
 
     ${CMAKE_SOURCE_DIR}/MQTTClient-C/MQTTLinux.c
-
     ${CMAKE_SOURCE_DIR}/MQTTClient-C/MQTTClient.c
 
     ${CMAKE_SOURCE_DIR}/MQTTPacket/MQTTConnectClient.c
