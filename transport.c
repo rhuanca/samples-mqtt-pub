@@ -184,11 +184,18 @@ int* sock = &mysock;
 	#endif
 		}
 	}
-	if (mysock == INVALID_SOCKET)
+
+    if(rc == -1) {
+        close(*sock);
+        return rc;
+    }
+
+    if (mysock == INVALID_SOCKET)
 		return rc;
 
 	tv.tv_sec = 1;  /* 1 second Timeout */
-	tv.tv_usec = 0;  
+	tv.tv_usec = 0;
+    setsockopt(mysock, SOL_SOCKET, SO_SNDTIMEO, (char *)&tv,sizeof(struct timeval));
 	setsockopt(mysock, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv,sizeof(struct timeval));
 	return mysock;
 }
