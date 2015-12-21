@@ -59,7 +59,7 @@ void InitTimer(Timer* timer)
 }
 
 
-int linux_read(Network* n, unsigned char* buffer, int len, int timeout_ms)
+int mqtt_linux_read(Network *n, unsigned char *buffer, int len, int timeout_ms)
 {
 	struct timeval interval = {timeout_ms / 1000, (timeout_ms % 1000) * 1000};
 	if (interval.tv_sec < 0 || (interval.tv_sec == 0 && interval.tv_usec <= 0))
@@ -89,7 +89,7 @@ int linux_read(Network* n, unsigned char* buffer, int len, int timeout_ms)
 }
 
 
-int linux_write(Network* n, unsigned char* buffer, int len, int timeout_ms)
+int mqtt_linux_write(Network *n, unsigned char *buffer, int len, int timeout_ms)
 {
 	struct timeval tv;
 
@@ -102,7 +102,7 @@ int linux_write(Network* n, unsigned char* buffer, int len, int timeout_ms)
 }
 
 
-void linux_disconnect(Network* n)
+void mqtt_linux_disconnect(Network *n)
 {
 	close(n->my_socket);
 }
@@ -111,9 +111,9 @@ void linux_disconnect(Network* n)
 void NewNetwork(Network* n)
 {
 	n->my_socket = 0;
-	n->mqttread = linux_read;
-	n->mqttwrite = linux_write;
-	n->disconnect = linux_disconnect;
+	n->mqttread = mqtt_linux_read;
+	n->mqttwrite = mqtt_linux_write;
+	n->disconnect = mqtt_linux_disconnect;
 }
 
 

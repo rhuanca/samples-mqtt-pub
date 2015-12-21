@@ -38,17 +38,17 @@
 typedef struct Timer Timer;
 
 struct Timer {
-	struct timeval end_time;
+    struct timeval end_time;
 };
 
 typedef struct Network Network;
 
 struct Network
 {
-	int my_socket;
-	int (*mqttread) (Network*, unsigned char*, int, int);
-	int (*mqttwrite) (Network*, unsigned char*, int, int);
-	void (*disconnect) (Network*);
+    int my_socket;
+    int (*mqttread) (Network*, unsigned char*, int, int);
+    int (*mqttwrite) (Network*, unsigned char*, int, int);
+    void (*disconnect) (Network*);
 };
 
 char expired(Timer*);
@@ -58,8 +58,8 @@ int left_ms(Timer*);
 
 void InitTimer(Timer*);
 
-int linux_read(Network*, unsigned char*, int, int);
-int linux_write(Network*, unsigned char*, int, int);
+int mqtt_linux_read(Network*, unsigned char*, int, int);
+int mqtt_linux_write(Network*, unsigned char*, int, int);
 void linux_disconnect(Network*);
 void NewNetwork(Network*);
 

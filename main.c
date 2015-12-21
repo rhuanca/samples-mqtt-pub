@@ -129,7 +129,6 @@ int main(int argc, char **argv) {
     double time_spent;
 
 
-    clock_t begin, end;
     MQTTString topicString = MQTTString_initializer;
 
     stop_init();
@@ -177,26 +176,11 @@ int main(int argc, char **argv) {
     topicString.cstring = opts.topic;
     message_len = strlen(opts.message);
 
-
     printf("Sending data...");
 
-    // check time
-    begin = clock();
-
-    for(counter=0; counter<opts.repeat; counter++) {
-        // publish
-        len = MQTTSerialize_publish(buf, buf_len, 0, 0, 0, 0, topicString, opts.message, message_len);
-        rc = transport_sendPacketBuffer(mqtt_sock_fd, buf, len);
-    }
-
-    // check time
-    end = clock();
-
-    time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-
-    printf("Time spent:\n");
-    printf("  secs: %.1f\n", time_spent);
-    printf("  clock ticks: %.2f\n", (double)(end - begin));
+    // publish
+    len = MQTTSerialize_publish(buf, buf_len, 0, 0, 0, 0, topicString, opts.message, message_len);
+    rc = transport_sendPacketBuffer(mqtt_sock_fd, buf, len);
 
     // disconnect
     len = MQTTSerialize_disconnect(buf, buf_len);
