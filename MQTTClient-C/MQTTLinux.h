@@ -58,9 +58,9 @@ int left_ms(Timer*);
 
 void InitTimer(Timer*);
 
-int linux_read(Network*, unsigned char*, int, int);
-int linux_write(Network*, unsigned char*, int, int);
-void linux_disconnect(Network*);
+int mqtt_linux_read(Network *, unsigned char *, int, int);
+int mqtt_linux_write(Network *, unsigned char *, int, int);
+void mqtt_linux_disconnect(Network *);
 void NewNetwork(Network*);
 
 int ConnectNetwork(Network*, char*, int);
